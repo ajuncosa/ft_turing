@@ -1,4 +1,10 @@
 *.out
 *.cmx
 *.cmi
+*.cmo
+._d
 *.o
+.depend
+ft_turing
+ft_turing.*
+old
