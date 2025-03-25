@@ -11,6 +11,7 @@ EXTERNAL_LIBS = yojson
 REQUIRED_PACKAGES = $(OCAMLFIND) $(EXTERNAL_LIBS)
 
 SOURCES = main.ml
+TEST_SOURCES = test.ml
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
 COBJS = $(SOURCES:.ml=.cmo)
@@ -52,6 +53,10 @@ check-dependencies:
 
 %.cmx: %.ml
 	$(OCAMLFIND) $(OCAMLOPT) $(LIBS:.cma=.cmxa) -c $<
+
+test: EXTERNAL_LIBS += ounit2
+test: check-dependencies
+	$(OCAMLFIND) $(OCAMLC) $(LIBS) -linkpkg -g $(SOURCES) $(TEST_SOURCES) -o $@
 
 clean:
 	@echo "Cleaning up..."
