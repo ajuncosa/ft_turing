@@ -10,7 +10,7 @@ OCAMLFIND = ocamlfind
 EXTERNAL_LIBS = yojson
 REQUIRED_PACKAGES = $(OCAMLFIND) $(EXTERNAL_LIBS)
 
-SOURCES = main.ml
+SOURCES = machine.ml parser.ml main.ml
 TEST_SOURCES = test.ml
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
@@ -60,11 +60,11 @@ test: check-dependencies
 
 clean:
 	@echo "Cleaning up..."
-	rm -f *.cm* *.o .depend
+	rm -f *.cm* *.o .depend *.log *.cache
 
 fclean: clean
 	@echo "Removing executables..."
-	rm -f $(NC_EXECUTABLE) $(BC_EXECUTABLE) $(NAME)
+	rm -f $(NC_EXECUTABLE) $(BC_EXECUTABLE) $(NAME) test
 
 depend: .depend
 
