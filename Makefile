@@ -7,10 +7,10 @@ OCAMLC = ocamlc
 OCAMLDEP = ocamldep
 OCAMLFIND = ocamlfind
 
-EXTERNAL_LIBS = yojson
-REQUIRED_PACKAGES = $(OCAMLFIND) $(EXTERNAL_LIBS)
+REQUIRED_PACKAGES = $(OCAMLFIND) yojson core core_unix
+EXTERNAL_LIBS = yojson core core_unix.command_unix
 
-SOURCES = machine.ml parser.ml main.ml
+SOURCES = transition.ml machine.ml parser.ml main.ml
 TEST_SOURCES = test.ml
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
@@ -55,6 +55,7 @@ check-dependencies:
 	$(OCAMLFIND) $(OCAMLOPT) $(LIBS:.cma=.cmxa) -c $<
 
 test: EXTERNAL_LIBS += ounit2
+test: REQUIRED_PACKAGES += ounit2
 test: check-dependencies
 	$(OCAMLFIND) $(OCAMLC) $(LIBS) -linkpkg -g $(SOURCES) $(TEST_SOURCES) -o $@
 

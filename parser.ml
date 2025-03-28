@@ -1,6 +1,6 @@
 module Json = Yojson.Basic
 
-let parse_machine_description (file_path : string) : Machine.machine =
+let parse_machine_description (file_path : string) : Machine.t =
   let json = try Json.from_file file_path
     with Yojson.Json_error e -> Printf.printf "Error: %s\n" e; exit 1 in
   {
@@ -10,7 +10,7 @@ let parse_machine_description (file_path : string) : Machine.machine =
     states = json |> Json.Util.member "states" |> Json.Util.convert_each Json.Util.to_string;
     initial = json |> Json.Util.member "initial" |> Json.Util.to_string;
     finals = json |> Json.Util.member "finals" |> Json.Util.convert_each Json.Util.to_string;
-    transitions = json |> Json.Util.member "transitions" |> Json.Util.to_assoc |> List.map (fun (state, transitions) -> (state, Json.Util.convert_each (fun t:Machine.transition ->
+    transitions = json |> Json.Util.member "transitions" |> Json.Util.to_assoc |> List.map (fun (state, transitions) -> (state, Json.Util.convert_each (fun t:Transition.t ->
       {
         from_state = state;
         read = t |> Json.Util.member "read" |> Json.Util.to_string;
