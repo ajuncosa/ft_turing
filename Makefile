@@ -7,8 +7,8 @@ OCAMLC = ocamlc
 OCAMLDEP = ocamldep
 OCAMLFIND = ocamlfind
 
-REQUIRED_PACKAGES = $(OCAMLFIND) yojson core core_unix
-EXTERNAL_LIBS = yojson core core_unix.command_unix
+REQUIRED_PACKAGES = $(OCAMLFIND) yojson cmdliner
+EXTERNAL_LIBS = yojson cmdliner
 
 SOURCES = transition.ml machine.ml parser.ml main.ml
 TEST_SOURCES = test.ml
