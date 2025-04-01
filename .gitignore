@@ -11,3 +11,4 @@ ft_turing.*
 *.cache
 test
 old
+build

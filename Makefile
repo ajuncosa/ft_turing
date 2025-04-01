@@ -14,8 +14,11 @@ SOURCES = transition.ml machine.ml parser.ml main.ml
 TEST_SOURCES = test.ml
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
-COBJS = $(SOURCES:.ml=.cmo)
-OPTOBJS = $(SOURCES:.ml=.cmx)
+BUILD_DIR = build
+COBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmo))
+OPTOBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmx))
+
+INCLUDES = -I $(BUILD_DIR)
 
 all: $(NAME)
 
@@ -27,11 +30,11 @@ bc: $(BC_EXECUTABLE)
 
 $(NC_EXECUTABLE): $(OPTOBJS)
 	@echo "Building project with ocamlopt..."
-	$(OCAMLFIND) $(OCAMLOPT) $(LIBS:.cma=.cmxa) -linkpkg -o $@ $^
+	$(OCAMLFIND) $(OCAMLOPT) $(LIBS:.cma=.cmxa) $(INCLUDES) -linkpkg -o $@ $^
 
 $(BC_EXECUTABLE): $(COBJS)
 	@echo "Building project with ocamlc..."
-	$(OCAMLFIND) $(OCAMLC) $(LIBS) -linkpkg -o $@ $^
+	$(OCAMLFIND) $(OCAMLC) $(LIBS) $(INCLUDES) -linkpkg -o $@ $^
 
 check-dependencies:
 	@echo "Checking for required OPAM packages..."
@@ -45,23 +48,27 @@ check-dependencies:
 		fi \
 	done
 
-%.cmo: %.ml
-	$(OCAMLFIND) $(OCAMLC) $(LIBS) -c $<
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-%.cmi: %.mli
-	$(OCAMLFIND) $(OCAMLC) $(LIBS) -c $<
+$(BUILD_DIR)/%.cmo: %.ml | $(BUILD_DIR)
+	$(OCAMLFIND) $(OCAMLC) $(LIBS) $(INCLUDES) -c -o $@ $<
 
-%.cmx: %.ml
-	$(OCAMLFIND) $(OCAMLOPT) $(LIBS:.cma=.cmxa) -c $<
+$(BUILD_DIR)/%.cmi: %.mli | $(BUILD_DIR)
+	$(OCAMLFIND) $(OCAMLC) $(LIBS) $(INCLUDES) -c -o $@ $<
+
+$(BUILD_DIR)/%.cmx: %.ml | $(BUILD_DIR)
+	$(OCAMLFIND) $(OCAMLOPT) $(LIBS:.cma=.cmxa) $(INCLUDES) -c -o $@ $<
 
 test: EXTERNAL_LIBS += ounit2
 test: REQUIRED_PACKAGES += ounit2
 test: check-dependencies
-	$(OCAMLFIND) $(OCAMLC) $(LIBS) -linkpkg -g $(SOURCES) $(TEST_SOURCES) -o $@
+	$(OCAMLFIND) $(OCAMLC) $(LIBS) $(INCLUDES) -linkpkg -g $(SOURCES) $(TEST_SOURCES) -o $@
 
 clean:
 	@echo "Cleaning up..."
-	rm -f *.cm* *.o .depend *.log *.cache
+	rm -rf $(BUILD_DIR)
+	rm -f *.log *.cache .depend
 
 fclean: clean
 	@echo "Removing executables..."
@@ -69,9 +76,9 @@ fclean: clean
 
 depend: .depend
 
-.depend:
+.depend: $(SOURCES) $(TEST_SOURCES)
 	@echo "Generating dependencies file..."
-	$(OCAMLDEP) $(SOURCES) > .depend
+	$(OCAMLDEP) $(INCLUDES) $^ > .depend
 
 re: fclean all
 
