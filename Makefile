@@ -1,6 +1,10 @@
-NAME = ft_turing
+BUILD_DIR = build
+NAME = $(BUILD_DIR)/ft_turing
+
 NC_EXECUTABLE = $(NAME).nc # native code
 BC_EXECUTABLE = $(NAME).bc # byte code
+
+DEPEND_FILE = $(BUILD_DIR)/.depend
 
 OCAMLOPT = ocamlopt
 OCAMLC = ocamlc
@@ -14,7 +18,6 @@ SOURCES = transition.ml machine.ml parser.ml main.ml
 TEST_SOURCES = test.ml
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
-BUILD_DIR = build
 COBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmo))
 OPTOBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmx))
 
@@ -68,20 +71,15 @@ test: check-dependencies
 clean:
 	@echo "Cleaning up..."
 	rm -rf $(BUILD_DIR)
-	rm -f *.log *.cache .depend
 
-fclean: clean
-	@echo "Removing executables..."
-	rm -f $(NC_EXECUTABLE) $(BC_EXECUTABLE) $(NAME) test
+depend: $(DEPEND_FILE)
 
-depend: .depend
-
-.depend: $(SOURCES) $(TEST_SOURCES)
+ $(DEPEND_FILE): $(SOURCES) $(TEST_SOURCES)
 	@echo "Generating dependencies file..."
-	$(OCAMLDEP) $(INCLUDES) $^ > .depend
+	$(OCAMLDEP) $(INCLUDES) $^ > $(DEPEND_FILE)
 
 re: fclean all
 
--include .depend
+-include $(DEPEND_FILE)
 
 .PHONY: all check-dependencies build nc bc clean fclean re depend
