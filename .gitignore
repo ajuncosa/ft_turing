@@ -9,6 +9,5 @@ ft_turing
 ft_turing.*
 *.log
 *.cache
-test
 old
 build
