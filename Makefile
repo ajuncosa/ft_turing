@@ -13,13 +13,14 @@ OCAMLFIND = ocamlfind
 
 REQUIRED_PACKAGES = $(OCAMLFIND) yojson cmdliner
 EXTERNAL_LIBS = yojson cmdliner
+LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
 SOURCES = transition.ml machine.ml parser.ml main.ml
-TEST_SOURCES = test.ml
-LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
+TEST_SOURCES = $(filter-out main.ml,$(SOURCES)) test.ml
 
 COBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmo))
 OPTOBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmx))
+TESTOBJS = $(addprefix $(BUILD_DIR)/,$(TEST_SOURCES:.ml=.cmo))
 
 INCLUDES = -I $(BUILD_DIR)
 
@@ -65,12 +66,14 @@ $(BUILD_DIR)/%.cmx: %.ml | $(BUILD_DIR)
 
 test: EXTERNAL_LIBS += ounit2
 test: REQUIRED_PACKAGES += ounit2
-test: check-dependencies
-	$(OCAMLFIND) $(OCAMLC) $(LIBS) $(INCLUDES) -linkpkg -g $(SOURCES) $(TEST_SOURCES) -o $@
+test: check-dependencies $(BUILD_DIR)/test
+
+$(BUILD_DIR)/test: $(TESTOBJS)
+	$(OCAMLFIND) $(OCAMLC) $(LIBS) $(INCLUDES) -linkpkg -g $^ -o $@
 
 clean:
 	@echo "Cleaning up..."
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) *.cmi *.cmo *.log *.cache
 
 depend: $(DEPEND_FILE)
 
