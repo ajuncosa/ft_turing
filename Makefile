@@ -1,5 +1,5 @@
 BUILD_DIR = build
-NAME = $(BUILD_DIR)/ft_turing
+NAME = ft_turing
 
 NC_EXECUTABLE = $(NAME).nc # native code
 BC_EXECUTABLE = $(NAME).bc # byte code
@@ -23,19 +23,19 @@ OPTOBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmx))
 
 INCLUDES = -I $(BUILD_DIR)
 
-all: $(NAME)
+all: $(BUILD_DIR)/$(NAME)
 
-$(NAME): check-dependencies nc bc
-	ln -sf $(BC_EXECUTABLE) $(NAME)
+$(BUILD_DIR)/$(NAME): check-dependencies nc bc
+	ln -sf $(BC_EXECUTABLE) $(BUILD_DIR)/$(NAME)
 
-nc: $(NC_EXECUTABLE)
-bc: $(BC_EXECUTABLE)
+nc: $(BUILD_DIR)/$(NC_EXECUTABLE)
+bc: $(BUILD_DIR)/$(BC_EXECUTABLE)
 
-$(NC_EXECUTABLE): $(OPTOBJS)
+$(BUILD_DIR)/$(NC_EXECUTABLE): $(OPTOBJS)
 	@echo "Building project with ocamlopt..."
 	$(OCAMLFIND) $(OCAMLOPT) $(LIBS:.cma=.cmxa) $(INCLUDES) -linkpkg -o $@ $^
 
-$(BC_EXECUTABLE): $(COBJS)
+$(BUILD_DIR)/$(BC_EXECUTABLE): $(COBJS)
 	@echo "Building project with ocamlc..."
 	$(OCAMLFIND) $(OCAMLC) $(LIBS) $(INCLUDES) -linkpkg -o $@ $^
 
@@ -74,12 +74,12 @@ clean:
 
 depend: $(DEPEND_FILE)
 
- $(DEPEND_FILE): $(SOURCES) $(TEST_SOURCES)
+$(DEPEND_FILE): $(SOURCES) $(TEST_SOURCES)
 	@echo "Generating dependencies file..."
 	$(OCAMLDEP) $(INCLUDES) $^ > $(DEPEND_FILE)
 
-re: fclean all
+re: clean all
 
 -include $(DEPEND_FILE)
 
-.PHONY: all check-dependencies build nc bc clean fclean re depend
+.PHONY: all check-dependencies build nc bc clean re depend
