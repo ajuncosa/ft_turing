@@ -19,14 +19,14 @@ REQUIRED_PACKAGES = $(OCAMLFIND) yojson cmdliner
 EXTERNAL_LIBS = yojson cmdliner
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
-SOURCES = transition.ml machine.ml parser.ml main.ml
+SOURCES = transition.ml tape.ml machine.ml parser.ml main.ml
 TEST_SOURCES = test.ml
 
 COBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmo))
 OPTOBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmx))
 TESTOBJS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES:.ml=.cmo))
 
-INCLUDES = -I $(BUILD_DIR)
+INCLUDES = -I $(BUILD_DIR) -I $(SRC_DIR) -I $(TEST_DIR)
 
 all: $(BUILD_DIR)/$(NAME)
 
@@ -87,7 +87,7 @@ clean:
 
 depend: $(DEPEND_FILE)
 
-$(DEPEND_FILE): $(SOURCES) $(TEST_SOURCES)
+$(DEPEND_FILE): $(addprefix $(SRC_DIR)/,$(SOURCES)) $(addprefix $(TEST_DIR)/,$(TEST_SOURCES)) | $(BUILD_DIR)
 	@echo "Generating dependencies file..."
 	$(OCAMLDEP) $(INCLUDES) $^ > $(DEPEND_FILE)
 
