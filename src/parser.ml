@@ -1,6 +1,6 @@
 module Json = Yojson.Basic
 
-let parse_machine_description (file_path : string) : Machine.t =
+let parse_machine_description (file_path : string) : MachineDescription.t =
   let json = try Json.from_file file_path
     with Yojson.Json_error e -> Printf.printf "Error: %s\n" e; exit 1 in
   {
