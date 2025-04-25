@@ -13,7 +13,7 @@ let run_turing description input =
 
 let execute_transition (machine : Machine.t) (transition : Transition.t) =
   let (machine : Machine.t) = {
-    tape = List.mapi (fun idx letter -> if idx = machine.head_pos then transition.write else letter) machine.tape;
+    tape = String.mapi (fun idx letter -> if idx = machine.head_pos then (String.get transition.write 0) else letter) machine.tape;
     (* TODO: check that head_pos is not out of bounds *)
     head_pos = if transition.action = Left then (machine.head_pos - 1) else (machine.head_pos + 1);
     state = transition.to_state;
