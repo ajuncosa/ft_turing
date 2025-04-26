@@ -19,7 +19,7 @@ REQUIRED_PACKAGES = $(OCAMLFIND) yojson cmdliner
 EXTERNAL_LIBS = yojson cmdliner
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
-SOURCES = transition.ml machine.ml machineDescription.ml parser.ml main.ml
+SOURCES = transition.ml machineDescription.ml machine.ml parser.ml main.ml
 TEST_SOURCES = test.ml
 
 COBJS = $(addprefix $(BUILD_DIR)/,$(SOURCES:.ml=.cmo))

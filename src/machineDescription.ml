@@ -1,14 +1,12 @@
-type state = string
-
 type t =
   {
     name : string;
     alphabet : string list;
     blank : string;
-    states : state list;
-    initial : state;
-    finals : state list;
-    transitions : (state * Transition.t list) list;
+    states : Transition.state list;
+    initial : string;
+    finals : string list;
+    transitions : (string * Transition.t list) list;
   }
 
 let to_string (m : t) =
