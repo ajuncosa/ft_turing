@@ -2,7 +2,7 @@ let start_turing json input =
   let description = Parser.parse_machine_description json in
   print_endline (MachineDescription.to_string description);
   let (machine : Machine.t) = {
-    tape = input;
+    tape = String.fold_right (fun c acc -> (String.make 1 c) :: acc) input [];
     head_pos = 0;
     state = description.initial;
   } in
