@@ -3,7 +3,7 @@ module Json = Yojson.Basic
 let validate_input (input : string) (description: MachineDescription.t) : bool =
   let letter_in_alphabet letter = List.exists (fun c -> c = letter) description.alphabet in
   let valid_input = String.for_all (fun l -> (letter_in_alphabet (String.make 1 l) ) ) input in
-  if not valid_input then Printf.printf "ERROR: Letter in input is not in alphabet.\n";
+  if not valid_input then Printf.printf "Letter in input is not in alphabet.\n";
   valid_input
 
 let validate_alphabet (alphabet : string list) : bool =
@@ -44,7 +44,7 @@ let validate_transitions (description : MachineDescription.t) : bool =
   in
 
   if List.for_all ( fun (key, transitions) -> ((state_exists key) && (valid_transition transitions)) ) description.transitions then true
-    else (print_endline "ERROR: Invalid machine description."; false)
+    else (print_endline "Invalid machine description."; false)
 
 let validate_machine_description (description : MachineDescription.t) : bool =
   (validate_alphabet description.alphabet)
@@ -53,27 +53,26 @@ let validate_machine_description (description : MachineDescription.t) : bool =
   && (validate_transitions description)
 
 let parse_machine_description (file_path : string) : MachineDescription.t =
-  let json = try Json.from_file file_path
-    with Yojson.Json_error msg -> Printf.printf "Json error while parsing machine description: %s\n" msg; exit 1
-  in try
-  {
-    name = json |> Json.Util.member "name" |> Json.Util.to_string;
-    alphabet = json |> Json.Util.member "alphabet" |> Json.Util.convert_each Json.Util.to_string;
-    blank = json |> Json.Util.member "blank" |> Json.Util.to_string;
-    states = json |> Json.Util.member "states" |> Json.Util.convert_each Json.Util.to_string;
-    initial = json |> Json.Util.member "initial" |> Json.Util.to_string;
-    finals = json |> Json.Util.member "finals" |> Json.Util.convert_each Json.Util.to_string;
-    transitions = json |> Json.Util.member "transitions" |> Json.Util.to_assoc |> List.map (fun (state, transitions) -> (state, Json.Util.convert_each (fun t:Transition.t ->
-      {
-        from_state = state;
-        read = t |> Json.Util.member "read" |> Json.Util.to_string;
-        to_state = t |> Json.Util.member "to_state" |> Json.Util.to_string;
-        write = t |> Json.Util.member "write" |> Json.Util.to_string;
-        action = if (t |> Json.Util.member "action" |> Json.Util.to_string) = "LEFT" then Left
-                  else if (t |> Json.Util.member "action" |> Json.Util.to_string) = "RIGHT" then Right else Invalid;
-      }) transitions));
-  }
+  try
+    let json = Json.from_file file_path in
+    {
+      name = json |> Json.Util.member "name" |> Json.Util.to_string;
+      alphabet = json |> Json.Util.member "alphabet" |> Json.Util.convert_each Json.Util.to_string;
+      blank = json |> Json.Util.member "blank" |> Json.Util.to_string;
+      states = json |> Json.Util.member "states" |> Json.Util.convert_each Json.Util.to_string;
+      initial = json |> Json.Util.member "initial" |> Json.Util.to_string;
+      finals = json |> Json.Util.member "finals" |> Json.Util.convert_each Json.Util.to_string;
+      transitions = json |> Json.Util.member "transitions" |> Json.Util.to_assoc |> List.map (fun (state, transitions) -> (state, Json.Util.convert_each (fun t:Transition.t ->
+        {
+          from_state = state;
+          read = t |> Json.Util.member "read" |> Json.Util.to_string;
+          to_state = t |> Json.Util.member "to_state" |> Json.Util.to_string;
+          write = t |> Json.Util.member "write" |> Json.Util.to_string;
+          action = if (t |> Json.Util.member "action" |> Json.Util.to_string) = "LEFT" then Left
+                    else if (t |> Json.Util.member "action" |> Json.Util.to_string) = "RIGHT" then Right else Invalid;
+        }) transitions));
+    }
   with
-    | Yojson.Json_error msg -> Printf.printf "Json error while parsing machine description: %s\n" msg; exit 1
-    | Json.Util.Type_error (msg, elem) -> Printf.printf "Type error while parsing machine description: %s (%s)\n" msg (Json.pretty_to_string elem); exit 1
-    | Invalid_argument (msg) -> Printf.printf "Error while parsing machine description: %s\n" msg; exit 1
+    | Yojson.Json_error msg -> failwith (Printf.sprintf "Json error while parsing machine description: %s\n" msg)
+    | Json.Util.Type_error (msg, elem) -> failwith (Printf.sprintf "Type error while parsing machine description: %s (%s)\n" msg (Json.pretty_to_string elem))
+    | Invalid_argument (msg) -> failwith (Printf.sprintf "Error while parsing machine description: %s\n" msg)
