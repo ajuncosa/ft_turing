@@ -9,7 +9,7 @@ let start_turing json input =
       head_pos = 0;
       state = description.initial;
     } in
-    Machine.run machine description
+    try Machine.run machine description with Failure e -> print_endline e; exit 1
     )
 
 open Cmdliner
