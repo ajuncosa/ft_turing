@@ -1,5 +1,11 @@
 module Json = Yojson.Basic
 
+let validate_input (input : string) (description: MachineDescription.t) : bool =
+  let letter_in_alphabet letter = List.exists (fun c -> c = letter) description.alphabet in
+  let valid_input = String.for_all (fun l -> (letter_in_alphabet (String.make 1 l) ) ) input in
+  if not valid_input then Printf.printf "ERROR: Letter in input is not in alphabet.\n";
+  valid_input
+
 let validate_alphabet (alphabet : string list) : bool =
   if (List.for_all (fun c -> String.length c = 1)) alphabet then true
     else false
@@ -40,7 +46,7 @@ let validate_transitions (description : MachineDescription.t) : bool =
   if List.for_all ( fun (key, transitions) -> ((state_exists key) && (valid_transition transitions)) ) description.transitions then true
     else (print_endline "ERROR: Invalid machine description."; false)
 
-let check_machine_description (description : MachineDescription.t) : bool =
+let validate_machine_description (description : MachineDescription.t) : bool =
   (validate_alphabet description.alphabet)
   && (validate_blank description.blank description.alphabet)
   && (validate_initial_state description.initial description.states)
