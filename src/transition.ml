@@ -1,4 +1,4 @@
-type action = Left | Right
+type action = Left | Right | Invalid
 
 type state = string
 
@@ -11,7 +11,7 @@ type t =
     action : action;
   }
 
-let to_string (t : t) = 
+let to_string (t : t) =
   Printf.sprintf "(%s, %s) -> (%s, %s, %s)" t.from_state t.read t.to_state t.write (if t.action = Left then "LEFT" else "RIGHT")
 
 let rec find (transition_list : t list) (current_letter : string) =
