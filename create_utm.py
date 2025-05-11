@@ -39,7 +39,7 @@
 import json
 
 # user alphabet
-input_alphabet = ["a", "b", "c", "d", "e", "n", "y", "0", "1", "+", "-", ".", "="]
+input_alphabet = ["a", "b", "c", "d", "e", "1", "+", "-", ".", "="]
 #reserved alphabet
 input_alphabet_marker = "!"
 section_separator = "|"
