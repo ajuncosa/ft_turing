@@ -20,6 +20,21 @@
 #
 #    ft_turing input for a unary_add:         "a|111+11=|a.a.Ra1a1Ra+b1Rb1b1Rb=c.Lc1d.R|d"
 #    ft_turing expected output for the above: "a|11111..|a.a.Ra1a1Ra+b1Rb1b1Rb=c.Lc1d.R|d"
+#
+# EXAMPLE 2:
+#    translation of user input:
+#    '1' = '1'
+#    '.' = '.'
+#    '-' = '-'
+#    '=' = '='
+#    'a' = 'scanright'
+#    'b' = 'eraseone'
+#    'c' = 'subone'
+#    'd' = 'skip'
+#    'e' = 'HALT'
+#
+#    ft_turing input for a unary_sub:         "a|111-11=|a.a.Ra1a1Ra-a-Ra=b.Lb1c=Lb-e.Lc1c1Lc-d-Ld.d.Ld1a.R|e"
+#    ft_turing expected output for the above: "a|1......|a.a.Ra1a1Ra-a-Ra=b.Lb1c=Lb-e.Lc1c1Lc-d-Ld.d.Ld1a.R|e"
 
 import json
 
