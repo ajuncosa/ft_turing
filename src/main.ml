@@ -1,15 +1,16 @@
 let start_turing json input =
   try
     let description = Parser.parse_machine_description json in
+    let exploded_input = String.fold_right (fun c acc -> (String.make 1 c) :: acc) input [] in
     Parser.validate_machine_description description;
-    Parser.validate_input input description;
+    Parser.validate_input exploded_input description;
     print_endline (MachineDescription.to_string description);
     let (machine : Machine.t) = {
-      tape = String.fold_right (fun c acc -> (String.make 1 c) :: acc) input [];
+      tape = exploded_input;
       head_pos = 0;
       state = description.initial;
     } in
-    Machine.run machine description
+    Machine.run machine description 0
   with Failure e -> print_endline e; exit 1
 
 open Cmdliner

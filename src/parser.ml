@@ -1,9 +1,11 @@
 module Json = Yojson.Basic
 
-let validate_input (input : string) (description: MachineDescription.t) =
-  let letter_in_alphabet letter = List.exists (fun c -> c = letter) description.alphabet in
-  if not (String.for_all (fun l -> (letter_in_alphabet (String.make 1 l))) input)
-  then failwith "Letter in input is not in alphabet."
+let rec validate_input (input : string list) (description: MachineDescription.t) =
+  match input with
+    | [] -> ()
+    | h :: t -> if not (List.exists (fun l -> l = h) description.alphabet) then failwith (Printf.sprintf "Letter '%s' from input is not part of the alphabet." h)
+      else if h = description.blank then failwith "Blank character cannot be part of the input"
+      else validate_input t description
 
 let validate_alphabet (alphabet : string list) =
   if not (List.for_all (fun c -> String.length c = 1) alphabet)
