@@ -1,56 +1,50 @@
 module Json = Yojson.Basic
 
-let validate_input (input : string) (description: MachineDescription.t) : bool =
+let validate_input (input : string) (description: MachineDescription.t) =
   let letter_in_alphabet letter = List.exists (fun c -> c = letter) description.alphabet in
-  let valid_input = String.for_all (fun l -> (letter_in_alphabet (String.make 1 l) ) ) input in
-  if not valid_input then Printf.printf "Letter in input is not in alphabet.\n";
-  valid_input
+  if not (String.for_all (fun l -> (letter_in_alphabet (String.make 1 l))) input)
+  then failwith "Letter in input is not in alphabet."
 
-let validate_alphabet (alphabet : string list) : bool =
-  if (List.for_all (fun c -> String.length c = 1)) alphabet then true
-    else false
+let validate_alphabet (alphabet : string list) =
+  if not (List.for_all (fun c -> String.length c = 1) alphabet)
+  then failwith "All letters in the alphabet must be strings of length 1."
 
-let validate_blank (blank : string) (alphabet : string list) : bool =
-  let exists = List.exists (fun l -> l = blank) alphabet in
-  if not exists then Printf.printf "Blank '%s' does not exist in alphabet.\n" blank;
-  exists
+let validate_blank (blank : string) (alphabet : string list) =
+  if not (List.exists (fun l -> l = blank) alphabet)
+  then failwith (Printf.sprintf "Blank '%s' does not exist in alphabet." blank)
 
 let validate_initial_state (state : string) (states: Transition.state list) =
-  let exists = List.exists (fun s -> s = state) states in
-  if not exists then Printf.printf "Initial state '%s' does not exist.\n" state;
-  exists
+  if not (List.exists (fun s -> s = state) states)
+  then failwith (Printf.sprintf "Initial state '%s' does not exist." state)
 
-let validate_transitions (description : MachineDescription.t) : bool =
+let validate_transitions (description : MachineDescription.t) =
   let state_exists (state : string) =
-    let exists = List.exists (fun s -> s = state) description.states in
-    if not exists then Printf.printf "State '%s' does not exist.\n" state;
-    exists
-  in
+    if not (List.exists (fun s -> s = state) description.states)
+    then failwith (Printf.sprintf "State '%s' does not exist." state)
+  in let letter_in_alphabet (letter : string) =
+    if not (List.exists (fun c -> c = letter) description.alphabet)
+    then failwith (Printf.sprintf "Letter '%s' is not in the alphabet." letter)
+  in let valid_action (action : Transition.action) = match action with
+    | Left | Right -> ()
+    | Invalid -> failwith (Printf.sprintf "Invalid action.")
+in List.iter (fun (key, transition_list) -> (
+      state_exists key;
+      List.iter (fun (t : Transition.t) -> (
+        state_exists t.to_state;
+        letter_in_alphabet t.read;
+        letter_in_alphabet t.write;
+        valid_action t.action
+      )) transition_list
+  )) description.transitions
 
-  let letter_in_alphabet (letter: string) =
-    let exists = List.exists (fun c -> c = letter) description.alphabet in
-    if not exists then Printf.printf "Letter '%s' is not in the alphabet.\n" letter;
-    exists
-  in
-
-  let valid_action (action: Transition.action) = match action with
-    | Left | Right -> true
-    | Invalid -> print_endline "Invalid action"; false
-  in
-
-  let valid_transition (transitions : (Transition.t list)) = List.for_all ( fun (t : Transition.t) -> (
-    (state_exists t.to_state) && (letter_in_alphabet t.read) && (letter_in_alphabet t.write) && (valid_action t.action)
-  )) transitions
-  in
-
-  if List.for_all ( fun (key, transitions) -> ((state_exists key) && (valid_transition transitions)) ) description.transitions then true
-    else (print_endline "Invalid machine description."; false)
-
-let validate_machine_description (description : MachineDescription.t) : bool =
-  (validate_alphabet description.alphabet)
-  && (validate_blank description.blank description.alphabet)
-  && (validate_initial_state description.initial description.states)
-  && (validate_transitions description)
+let validate_machine_description (description : MachineDescription.t) =
+  try
+    validate_alphabet description.alphabet;
+    validate_blank description.blank description.alphabet;
+    validate_initial_state description.initial description.states;
+    validate_transitions description
+  with
+  | Failure e -> failwith ("Invalid machine description: " ^ e)
 
 let parse_machine_description (file_path : string) : MachineDescription.t =
   try
@@ -69,7 +63,8 @@ let parse_machine_description (file_path : string) : MachineDescription.t =
           to_state = t |> Json.Util.member "to_state" |> Json.Util.to_string;
           write = t |> Json.Util.member "write" |> Json.Util.to_string;
           action = if (t |> Json.Util.member "action" |> Json.Util.to_string) = "LEFT" then Left
-                    else if (t |> Json.Util.member "action" |> Json.Util.to_string) = "RIGHT" then Right else Invalid;
+                    else if (t |> Json.Util.member "action" |> Json.Util.to_string) = "RIGHT" then Right
+                    else Invalid;
         }) transitions));
     }
   with

@@ -1,5 +1,5 @@
 # EXPECTED FORMAT OF THE UTM INPUT:
-#    <initial_state> 1 <sub_machine_input> 2 <transitions> 3 <final_state>
+#    <initial_state> | <sub_machine_input> | <transitions> | <final_state>
 #
 # EXPECTED FORMAT OF TRANSITIONS:
 #    <from_state> <from_letter> <to_state> <to_letter> <movement>
@@ -9,32 +9,30 @@
 #
 # EXAMPLE:
 #    translation of user input:
-#    a = 1
-#    b = +
-#    c = =
-#    d = .
-#    e = scanright
-#    f = replaceplus
-#    g = eraseone
-#    h = halt
+#    '1' = '1'
+#    '+' = '+'
+#    '=' = '='
+#    '.' = '.'
+#    'a' = 'scanright'
+#    'b' = 'replaceplus'
+#    'c' = 'eraseone'
+#    'd' = 'halt'
 #
-#    ft_turing input for a unary_add:         "e1aaabaac2ededReaeaRebfaRfafaRfcgdLgahdR3h"
-#    ft_turing expected output for the above: "e1aaaaadd2ededReaeaRebfaRfafaRfcgdLgahdR3h"
+#    ft_turing input for a unary_add:         "a|111+11=|a.a.Ra1a1Ra+b1Rb1b1Rb=c.Lc1d.R|d"
+#    ft_turing expected output for the above: "a|11111..|a.a.Ra1a1Ra+b1Rb1b1Rb=c.Lc1d.R|d"
 
 import json
 
 # user alphabet
-input_alphabet = ["a", "b", "c", "d", "e", "f", "g", "h"]
+input_alphabet = ["a", "b", "c", "d", "e", "n", "y", "0", "1", "+", "-", ".", "="]
 #reserved alphabet
 input_alphabet_marker = "!"
-section_separator_1 = "1"
-section_separator_2 = "2"
-section_separator_3 = "3"
+section_separator = "|"
 movement_chars = ["L", "R"]
 transitions_alphabet = input_alphabet + movement_chars
-blank = "."
+blank = "~"
 #total machine alphabet
-machine_alphabet = [blank] + input_alphabet + [input_alphabet_marker] + [section_separator_1, section_separator_2, section_separator_3] + movement_chars
+machine_alphabet = [blank] + input_alphabet + [input_alphabet_marker] + [section_separator] + movement_chars
 initial_state = "get_init_state"
 final_state = "HALT"
 
@@ -60,15 +58,17 @@ def create_new_transition(from_state, read, to_state, write, action):
         "action" : action
     })
 
-# buscar el estado inicial
 create_new_state(initial_state)
+create_new_state(final_state)
+
+# buscar el estado inicial
 for s in input_alphabet:
     find_input_from_state_s = f"find_input_from_state_{s}"
     create_new_state(find_input_from_state_s)
     create_new_transition(initial_state, s, find_input_from_state_s, s, "RIGHT")
 
     # saltarse el separador
-    create_new_transition(find_input_from_state_s, section_separator_1, find_input_from_state_s, section_separator_1, "RIGHT")
+    create_new_transition(find_input_from_state_s, section_separator, find_input_from_state_s, section_separator, "RIGHT")
 
     # encontrar el primer carácter del input de la submáquina (desde el estado inicial) y marcarlo
     for l in input_alphabet:
@@ -76,17 +76,18 @@ for s in input_alphabet:
         create_new_state(find_trans_from_state_s_letter_l)
         create_new_transition(find_input_from_state_s, l, find_trans_from_state_s_letter_l, input_alphabet_marker, "RIGHT")
 
-        # buscar transición para el estado y letra actual, saltándose todo el input hasta llegar al separador 2
+        # buscar transición para el estado y letra actual, saltándose todo el input hasta llegar al 2º separador
         for l2 in input_alphabet:
             create_new_transition(find_trans_from_state_s_letter_l, l2, find_trans_from_state_s_letter_l, l2, "RIGHT")
 
-# cuando encuentra el 2, se lo salta pero entra en un nuevo estado para comprobar si la siguiente letra que encuentre es el state que busca:
+# cuando encuentra el segundo separador de sección, se lo salta pero entra en un nuevo estado
+# para comprobar si la siguiente letra que encuentre es el state que busca:
 for s in input_alphabet:
     for l in input_alphabet:
         find_trans_from_state_s_letter_l = f"find_trans_from_state_{s}_letter_{l}"
         check_state_from_state_s_letter_l = f"check_state_from_state_{s}_letter_{l}"
         create_new_state(check_state_from_state_s_letter_l)
-        create_new_transition(find_trans_from_state_s_letter_l, section_separator_2, check_state_from_state_s_letter_l, section_separator_2, "RIGHT")
+        create_new_transition(find_trans_from_state_s_letter_l, section_separator, check_state_from_state_s_letter_l, section_separator, "RIGHT")
         # si encuentra una "R" o "L", que separan transiciones, tiene el mismo comportamiento que con el separador 2 (se usa para saltar de una transición a otra):
         create_new_transition(find_trans_from_state_s_letter_l, "R", check_state_from_state_s_letter_l, "R", "RIGHT")
         create_new_transition(find_trans_from_state_s_letter_l, "L", check_state_from_state_s_letter_l, "L", "RIGHT")
@@ -143,7 +144,7 @@ for s in input_alphabet:
             create_new_transition(find_finals_section_from_trans_s_l_R, l2, find_finals_section_from_trans_s_l_R, l2, "RIGHT")
             create_new_transition(find_finals_section_from_trans_s_l_L, l2, find_finals_section_from_trans_s_l_L, l2, "RIGHT")
 
-# Cuando encuentra el 3, se mueve al siguiente carácter para poder checkear si coincide con el state al que estamos cambiando:
+# Cuando encuentra el 3er separador, se mueve al siguiente carácter para poder checkear si coincide con el state al que estamos cambiando:
 for s in input_alphabet:
     for l in input_alphabet:
         find_finals_section_from_trans_s_l_R = f"find_finals_section_from_trans_{s}_{l}_R"
@@ -152,49 +153,79 @@ for s in input_alphabet:
         find_final_state_from_trans_s_l_L = f"find_final_state_from_trans_{s}_{l}_L"
         create_new_state(find_final_state_from_trans_s_l_R)
         create_new_state(find_final_state_from_trans_s_l_L)
-        create_new_transition(find_finals_section_from_trans_s_l_R, section_separator_3, find_final_state_from_trans_s_l_R, section_separator_3, "RIGHT")
-        create_new_transition(find_finals_section_from_trans_s_l_L, section_separator_3, find_final_state_from_trans_s_l_L, section_separator_3, "RIGHT")
+        create_new_transition(find_finals_section_from_trans_s_l_R, section_separator, find_final_state_from_trans_s_l_R, section_separator, "RIGHT")
+        create_new_transition(find_finals_section_from_trans_s_l_L, section_separator, find_final_state_from_trans_s_l_L, section_separator, "RIGHT")
 
 # comprobar si el estado al que tiene que cambiar es un final state (de momento, solo vamos a trabajar como si solo pudiese haber un final state)
 for l in input_alphabet:
-    create_new_state(f"process_final_transition_{l}_R")
-    create_new_state(f"process_final_transition_{l}_L")
+    create_new_state(f"jump_back_2_separators_to_process_final_trans_{l}_R")
+    create_new_state(f"jump_back_2_separators_to_process_final_trans_{l}_L")
+    create_new_state(f"jump_back_1_separator_to_process_final_trans_{l}_R")
+    create_new_state(f"jump_back_1_separator_to_process_final_trans_{l}_L")
 for s in input_alphabet:
     for l in input_alphabet:
-        process_final_transition_l_R = f"process_final_transition_{l}_R"
-        process_final_transition_l_L = f"process_final_transition_{l}_L"
         find_final_state_from_trans_s_l_R = f"find_final_state_from_trans_{s}_{l}_R"
         find_final_state_from_trans_s_l_L = f"find_final_state_from_trans_{s}_{l}_L"
-        process_transition_s_l_R = f"process_transition_{s}_{l}_R"
-        process_transition_s_l_L = f"process_transition_{s}_{l}_L"
-        create_new_state(process_transition_s_l_R)
-        create_new_state(process_transition_s_l_L)
+        jump_back_2_separators_to_process_final_trans_l_R = f"jump_back_2_separators_to_process_final_trans_{l}_R"
+        jump_back_2_separators_to_process_final_trans_l_L = f"jump_back_2_separators_to_process_final_trans_{l}_L"
+        jump_back_1_separator_to_process_final_trans_l_R = f"jump_back_1_separator_to_process_final_trans_{l}_R"
+        jump_back_1_separator_to_process_final_trans_l_L = f"jump_back_1_separator_to_process_final_trans_{l}_L"
+        
+        jump_back_2_separators_to_process_trans_s_l_R = f"jump_back_2_separators_to_process_trans_{s}_{l}_R"
+        jump_back_2_separators_to_process_trans_s_l_L = f"jump_back_2_separators_to_process_trans_{s}_{l}_L"
+        create_new_state(jump_back_2_separators_to_process_trans_s_l_R)
+        create_new_state(jump_back_2_separators_to_process_trans_s_l_L)
+        jump_back_1_separator_to_process_trans_s_l_R = f"jump_back_1_separator_to_process_trans_{s}_{l}_R"
+        jump_back_1_separator_to_process_trans_s_l_L = f"jump_back_1_separator_to_process_trans_{s}_{l}_L"
+        create_new_state(jump_back_1_separator_to_process_trans_s_l_R)
+        create_new_state(jump_back_1_separator_to_process_trans_s_l_L)
+        
         for l2 in input_alphabet:
             if l2 != s:
-                create_new_transition(find_final_state_from_trans_s_l_R, l2, process_transition_s_l_R, l2, "LEFT")
-                create_new_transition(find_final_state_from_trans_s_l_L, l2, process_transition_s_l_L, l2, "LEFT")
+                create_new_transition(find_final_state_from_trans_s_l_R, l2, jump_back_2_separators_to_process_trans_s_l_R, l2, "LEFT")
+                create_new_transition(find_final_state_from_trans_s_l_L, l2, jump_back_2_separators_to_process_trans_s_l_L, l2, "LEFT")
             else:
-                create_new_transition(find_final_state_from_trans_s_l_R, l2, process_final_transition_l_R, l2, "LEFT")
-                create_new_transition(find_final_state_from_trans_s_l_L, l2, process_final_transition_l_L, l2, "LEFT")
+                create_new_transition(find_final_state_from_trans_s_l_R, l2, jump_back_2_separators_to_process_final_trans_l_R, l2, "LEFT")
+                create_new_transition(find_final_state_from_trans_s_l_L, l2, jump_back_2_separators_to_process_final_trans_l_L, l2, "LEFT")
 
         # movemos la head hacia atrás saltándonos todo hasta llegar al input de nuevo (al separator 2) para poder aplicar la transición:
-        for l2 in transitions_alphabet + [section_separator_3]:
-            create_new_transition(process_transition_s_l_R, l2, process_transition_s_l_R, l2, "LEFT")
-            create_new_transition(process_transition_s_l_L, l2, process_transition_s_l_L, l2, "LEFT")
-            create_new_transition(process_final_transition_l_R, l2, process_final_transition_l_R, l2, "LEFT")
-            create_new_transition(process_final_transition_l_L, l2, process_final_transition_l_L, l2, "LEFT")
+        for l2 in transitions_alphabet:
+            create_new_transition(jump_back_2_separators_to_process_trans_s_l_R, l2, jump_back_2_separators_to_process_trans_s_l_R, l2, "LEFT")
+            create_new_transition(jump_back_2_separators_to_process_trans_s_l_L, l2, jump_back_2_separators_to_process_trans_s_l_L, l2, "LEFT")
+            create_new_transition(jump_back_1_separator_to_process_trans_s_l_R, l2, jump_back_1_separator_to_process_trans_s_l_R, l2, "LEFT")
+            create_new_transition(jump_back_1_separator_to_process_trans_s_l_L, l2, jump_back_1_separator_to_process_trans_s_l_L, l2, "LEFT")
 
-# Cuando encuentra el separador 2, empieza a buscar el input marcado para sustituirlo y aplicar la transición:
+        create_new_transition(jump_back_2_separators_to_process_trans_s_l_R, section_separator, jump_back_1_separator_to_process_trans_s_l_R, section_separator, "LEFT")
+        create_new_transition(jump_back_2_separators_to_process_trans_s_l_L, section_separator, jump_back_1_separator_to_process_trans_s_l_L, section_separator, "LEFT")
+
+# mover la head hacia atrás saltándonos todo hasta llegar al input de nuevo (al separator 2), pero para el caso final:
+for l in input_alphabet:
+    jump_back_2_separators_to_process_final_trans_l_R = f"jump_back_2_separators_to_process_final_trans_{l}_R"
+    jump_back_2_separators_to_process_final_trans_l_L = f"jump_back_2_separators_to_process_final_trans_{l}_L"
+    jump_back_1_separator_to_process_final_trans_l_R = f"jump_back_1_separator_to_process_final_trans_{l}_R"
+    jump_back_1_separator_to_process_final_trans_l_L = f"jump_back_1_separator_to_process_final_trans_{l}_L"
+
+    create_new_transition(jump_back_2_separators_to_process_final_trans_l_R, section_separator, jump_back_1_separator_to_process_final_trans_l_R, section_separator, "LEFT")
+    create_new_transition(jump_back_2_separators_to_process_final_trans_l_L, section_separator, jump_back_1_separator_to_process_final_trans_l_L, section_separator, "LEFT")
+    for l2 in transitions_alphabet:
+        create_new_transition(jump_back_2_separators_to_process_final_trans_l_R, l2, jump_back_2_separators_to_process_final_trans_l_R, l2, "LEFT")
+        create_new_transition(jump_back_2_separators_to_process_final_trans_l_L, l2, jump_back_2_separators_to_process_final_trans_l_L, l2, "LEFT")
+        create_new_transition(jump_back_1_separator_to_process_final_trans_l_R, l2, jump_back_1_separator_to_process_final_trans_l_R, l2, "LEFT")
+        create_new_transition(jump_back_1_separator_to_process_final_trans_l_L, l2, jump_back_1_separator_to_process_final_trans_l_L, l2, "LEFT")
+        
+
+# Cuando encuentra el 2º separador, empieza a buscar el input marcado para sustituirlo y aplicar la transición:
 for s in input_alphabet:
     for l in input_alphabet:
-        process_transition_s_l_R = f"process_transition_{s}_{l}_R"
-        process_transition_s_l_L = f"process_transition_{s}_{l}_L"
+        jump_back_1_separator_to_process_trans_s_l_R = f"jump_back_1_separator_to_process_trans_{s}_{l}_R"
+        jump_back_1_separator_to_process_trans_s_l_L = f"jump_back_1_separator_to_process_trans_{s}_{l}_L"
         find_marked_input_to_apply_s_l_R = f"find_marked_input_to_apply_{s}_{l}_R"
         find_marked_input_to_apply_s_l_L = f"find_marked_input_to_apply_{s}_{l}_L"
         create_new_state(find_marked_input_to_apply_s_l_R)
         create_new_state(find_marked_input_to_apply_s_l_L)
-        create_new_transition(process_transition_s_l_R, section_separator_2, find_marked_input_to_apply_s_l_R, section_separator_2, "LEFT")
-        create_new_transition(process_transition_s_l_L, section_separator_2, find_marked_input_to_apply_s_l_L, section_separator_2, "LEFT")
+
+        create_new_transition(jump_back_1_separator_to_process_trans_s_l_R, section_separator, find_marked_input_to_apply_s_l_R, section_separator, "LEFT")
+        create_new_transition(jump_back_1_separator_to_process_trans_s_l_L, section_separator, find_marked_input_to_apply_s_l_L, section_separator, "LEFT")
 
         # saltarse caracteres no marcados:
         for l2 in input_alphabet:
@@ -203,14 +234,15 @@ for s in input_alphabet:
 
 # lo mismo pero para el final state (es distinto xq solo guarda la letra, el state no le hace falta)
 for l in input_alphabet:
-    process_final_transition_l_R = f"process_final_transition_{l}_R"
-    process_final_transition_l_L = f"process_final_transition_{l}_L"
+    jump_back_1_separator_to_process_final_trans_l_R = f"jump_back_1_separator_to_process_final_trans_{l}_R"
+    jump_back_1_separator_to_process_final_trans_l_L = f"jump_back_1_separator_to_process_final_trans_{l}_L"
     find_marked_input_to_apply_final_l_R = f"find_marked_input_to_apply_final_{l}_R"
     find_marked_input_to_apply_final_l_L = f"find_marked_input_to_apply_final_{l}_L"
     create_new_state(find_marked_input_to_apply_final_l_R)
     create_new_state(find_marked_input_to_apply_final_l_L)
-    create_new_transition(process_final_transition_l_R, section_separator_2, find_marked_input_to_apply_final_l_R, section_separator_2, "LEFT")
-    create_new_transition(process_final_transition_l_L, section_separator_2, find_marked_input_to_apply_final_l_L, section_separator_2, "LEFT")
+
+    create_new_transition(jump_back_1_separator_to_process_final_trans_l_R, section_separator, find_marked_input_to_apply_final_l_R, section_separator, "LEFT")
+    create_new_transition(jump_back_1_separator_to_process_final_trans_l_L, section_separator, find_marked_input_to_apply_final_l_L, section_separator, "LEFT")
 
     # saltarse caracteres no marcados:
     for l2 in input_alphabet:
@@ -242,8 +274,6 @@ for l in input_alphabet:
     
     # una vez movido el head, TERMINAR!!!!
     create_new_transition(move_head_with_final_state, l, final_state, l, "RIGHT")
-
-create_new_state(final_state)
 
 with open("machine_descriptions/universal_turing_machine.json", "w") as f:
     f.write(json.dumps(machine_description, indent=4))

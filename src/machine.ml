@@ -14,10 +14,11 @@ let execute_transition (machine : t) (transition : Transition.t) (blank : string
     tape = List.mapi (fun idx letter -> if idx = machine.head_pos then transition.write else letter) machine.tape;
     head_pos = if transition.action = Left then (machine.head_pos - 1) else (machine.head_pos + 1);
     state = transition.to_state;
-  } in match m.head_pos with
-  | h when h < 1 -> { m with tape = blank :: m.tape; head_pos = 0 }
-  | h when h > List.length m.tape -> { m with tape = m.tape @ [blank] }
-  | _ -> m
+  }
+  in match m.head_pos with
+    | h when h < 1 -> { m with tape = blank :: m.tape; head_pos = 0 }
+    | h when h > List.length m.tape -> { m with tape = m.tape @ [blank] }
+    | _ -> m
 
 let rec run (machine : t) (description : MachineDescription.t) =
   let transition = try

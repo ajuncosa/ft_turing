@@ -1,16 +1,14 @@
 let start_turing json input =
   try
     let description = Parser.parse_machine_description json in
+    Parser.validate_machine_description description;
+    Parser.validate_input input description;
     print_endline (MachineDescription.to_string description);
-    let valid_description = Parser.validate_machine_description description in
-    let valid_input = Parser.validate_input input description in
-    if (valid_description = false || valid_input = false) then ()
-    else
-      let (machine : Machine.t) = {
-        tape = String.fold_right (fun c acc -> (String.make 1 c) :: acc) input [];
-        head_pos = 0;
-        state = description.initial;
-      } in
+    let (machine : Machine.t) = {
+      tape = String.fold_right (fun c acc -> (String.make 1 c) :: acc) input [];
+      head_pos = 0;
+      state = description.initial;
+    } in
     Machine.run machine description
   with Failure e -> print_endline e; exit 1
 
