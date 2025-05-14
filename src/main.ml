@@ -11,7 +11,9 @@ let start_turing json input =
       state = description.initial;
     } in
     Machine.run machine description 0
-  with Failure e -> print_endline e; exit 1
+  with
+  | Failure e -> print_endline e; exit 1
+  | Sys_error e -> print_endline e; exit 1
 
 open Cmdliner
 open Cmdliner.Term.Syntax

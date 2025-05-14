@@ -18,7 +18,7 @@ let execute_transition (machine : t) (transition : Transition.t) (blank : string
     state = transition.to_state;
   }
   in match m.head_pos with
-    | h when h < 1 -> { m with tape = blank :: m.tape; head_pos = 0 }
+    | h when h < 0 -> { m with tape = blank :: m.tape; head_pos = 0 }
     | h when h >= List.length m.tape -> { m with tape = m.tape @ [blank] }
     | _ -> m
 

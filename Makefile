@@ -9,7 +9,7 @@ OCAMLC = ocamlc
 OCAMLDEP = ocamldep
 OCAMLFIND = ocamlfind
 
-REQUIRED_PACKAGES = yojson cmdliner
+REQUIRED_PACKAGES = $(OCAMLFIND) yojson cmdliner
 EXTERNAL_LIBS = yojson cmdliner
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
